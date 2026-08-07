@@ -23,7 +23,24 @@ jobs:
         shell: bash
         run: pip install -r test/requirements.txt
 
+      # Our sources are a STRUCTURAL sky130 netlist (see test/Makefile), so even
+      # the "RTL" simulation needs the vendor cell models. Pinned to the SAME PDK
+      # revision LibreLane hardens with, read from pdk.json in the tt_submission
+      # artifact rather than remembered:
+      #   FLOW_VERSION 3.0.5 · PDK_SOURCE open_pdks · PDK_VERSION 8afc8346…
+      # ⚠️ RE-PIN THIS if the shuttle's LibreLane moves. If it drifts, the cells
+      # simulated here stop being the cells fabricated, and this job would go on
+      # passing while saying less than it claims.
+      - name: Install sky130A PDK
+        uses: TinyTapeout/ciel-action@v1
+        with:
+          pdk_name: sky130A
+          pdk_version: 8afc8346a57fe1ab7934ba5a6056ea8b43078e71
+          pdk_root: /home/runner/pdk
+
       - name: Run tests
+        env:
+          PDK_ROOT: /home/runner/pdk
         run: |
           cd test
           make clean

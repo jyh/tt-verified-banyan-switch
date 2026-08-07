@@ -24,8 +24,34 @@ PROJECT_SOURCES = project.v batcher_struct.v banyan_fabric.v bitserial_switch.v
 
 ifneq ($(GATES),yes)
 
-# RTL simulation
+# "RTL" simulation — and the scare quotes are load-bearing for THIS project.
+#
+# ⚠️ OUR SOURCES ARE A STRUCTURAL sky130 NETLIST, not RTL. `batcher_struct.v`
+# instantiates 504 standard cells (and2_1 ×144, inv_1 ×120, mux2_1 ×120,
+# or2_1 ×72, xor2_1 ×48) because synthesis-as-passthrough is this project's
+# whole claim: the netlist proved in Lean is the netlist that ships. So Icarus
+# needs the vendor cell models HERE exactly as the GATES=yes branch does.
+# Without them elaboration dies with 505 × "Unknown module type:
+# sky130_fd_sc_hd__and2_1" and `results.xml` is never written.
+#
+# ⛔ AND NOT THE OBVIOUS ALTERNATIVE: shipping a behavioural stand-in for the
+# Batcher so that "RTL" means RTL. That would simulate a DIFFERENT file from the
+# one fabricated, which is precisely the gap this repo exists to close.
+#
+# 📌 `USE_POWER_PINS` is deliberately NOT defined here. Our cells are
+# instantiated without power pins (`.A/.B/.X`), unlike the LibreLane-produced
+# netlist the GATES=yes branch consumes — defining it would leave VPWR/VGND
+# unconnected and drive every output to X.
+#
+# What this job tests that `gl_test` does not: `gl_test` runs the POST-layout
+# netlist; this runs the PRE-layout netlist we emitted and proved. Different
+# artifacts, both worth checking.
 SIM_BUILD        = sim_build/rtl
+COMPILE_ARGS    += -DFUNCTIONAL
+COMPILE_ARGS    += -DSIM
+COMPILE_ARGS    += -DUNIT_DELAY=\#1
+VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
+VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 
 else
