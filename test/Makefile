@@ -1,23 +1,37 @@
-# Makefile
-# See https://docs.cocotb.org/en/stable/quickstart.html for more info
+# SPDX-FileCopyrightText: 2026 Jason Hickey
+# SPDX-License-Identifier: Apache-2.0
+#
+#   make                # RTL simulation
+#   GATES=yes make      # the SAME testbench against the post-layout netlist
+#
+# TinyTapeout's `gds` workflow runs the gate-level form for you in its `gl_test`
+# job, against the POWERED netlist, and a failure there reddens the gds workflow
+# — which is blocking for submission. So this file is on the critical path.
+#
+# ⚠️ PROJECT_SOURCES must be kept in sync BY HAND with `source_files` in
+#    info.yaml. Nothing in TinyTapeout's flow checks that they agree.
+#    `../validate.py` does — run it after touching either.
 
-# defaults
+# DELIBERATE DIVERGENCE FROM THE TEMPLATE, so it does not read as an oversight:
+# the template declares `FST ?= -fst` and then never references it, while its
+# tb.v writes `tb.fst` — and without the runtime flag iverilog puts VCD-format
+# bytes in a file named .fst. We dump `tb.vcd` and drop the dead variable, which
+# is self-consistent. Nothing in TT's CI consumes the waveform.
 SIM ?= icarus
-FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+PROJECT_SOURCES = project.v banyan_fabric.v bitserial_switch.v
 
 ifneq ($(GATES),yes)
 
-# RTL simulation:
-SIM_BUILD				= sim_build/rtl
+# RTL simulation
+SIM_BUILD        = sim_build/rtl
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 
 else
 
-# Gate level simulation:
-SIM_BUILD				= sim_build/gl
+# Gate-level simulation
+SIM_BUILD        = sim_build/gl
 COMPILE_ARGS    += -DGL_TEST
 COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DUSE_POWER_PINS
@@ -26,20 +40,17 @@ COMPILE_ARGS    += -DUNIT_DELAY=\#1
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
 
-# this gets copied in by the GDS action workflow
+# Copied in by the GDS action workflow.
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
 endif
 
-# Allow sharing configuration between design and testbench via `include`:
-COMPILE_ARGS 		+= -I$(SRC_DIR)
+COMPILE_ARGS    += -I$(SRC_DIR)
 
-# Include the testbench sources:
 VERILOG_SOURCES += $(PWD)/tb.v
 TOPLEVEL = tb
 
-# List test modules to run, separated by commas and without the .py suffix:
+# cocotb 2.x: this is COCOTB_TEST_MODULES, not 1.x's MODULE.
 COCOTB_TEST_MODULES = test
 
-# include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim

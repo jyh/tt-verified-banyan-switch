@@ -1,42 +1,59 @@
-![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
+# Verified 8×8 bit-serial banyan switch — TinyTapeout TTSKY26c
 
-# Tiny Tapeout Verilog Project Template
+A self-routing 8×8 packet switch fabric whose **gate netlist is proved
+equivalent to its specification inside the Lean kernel**. It recreates the
+banyan half of **US Patent 4,910,730** (1988) — an ATM packet switch built as
+two chips, a Batcher sorter and a banyan router. That two-chip partition is also
+the proof's partition: the sorter is the *hypothesis*, the banyan is the
+*theorem*. **This chip is the proved half.**
 
-- [Read the documentation for project](docs/info.md)
+Read the datasheet first: [`docs/info.md`](docs/info.md).
 
-## What is Tiny Tapeout?
+## What is actually proved, and what is not
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+The synthesized gate netlist of the switch element — real sky130 standard cells,
+flip-flops included — computes the same outputs and next state as the Lean
+specification **for every state and every input**, checked by kernel reduction
+and lifted across cycles by induction. No SAT solver is trusted and no
+`native_decide` is used.
 
-To learn more and get started, visit https://tinytapeout.com.
+**A banyan routes correctly only when the destinations presented to it are
+sorted.** Of all 40,320 full-load permutations, exactly **4,096 (10.16 %)** route
+without internal collision. The Batcher sorter that would guarantee sortedness is
+on neither this chip nor in Lean. So this is a correct router *given a correct
+input order*, and the ordering must come from off-chip — as it did in 1988.
 
-## Set up your Verilog project
+## Layout of this directory
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
+| path | what |
+|---|---|
+| `info.yaml` | the manifest — schema authority is `tt-support-tools/project_info.py` |
+| `src/project.v` | the TT wrapper (`tt_um_saltworks_banyan`) |
+| `src/config.json` | the two hardening knobs; rationale in [`docs/hardening-choices.md`](docs/hardening-choices.md) |
+| `docs/info.md` | the datasheet body spliced into the shuttle datasheet |
+| `docs/submission-checklist.md` | prepared / owed / the human's clicks |
+| `test/` | the cocotb bench — [`test/README.md`](test/README.md) |
+| `assemble.sh` | builds the submission tree; **the RTL is not duplicated here** |
+| `validate.py` | offline pre-flight for every gate that needs no EDA toolchain |
 
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
+**`src/banyan_fabric.v` and `src/bitserial_switch.v` are not checked in.** They
+live once, in `SaltWorks/Silicon/RTL/`, because that is what the equivalence
+proof and the synthesis script read; `assemble.sh` copies them in. A copy a human
+maintains drifts; a copy a script makes does not.
 
-## Enable GitHub actions to build the results page
+## Assembling and checking it
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+```sh
+./assemble.sh /path/to/tt-repo-clone   # drop our files into a template checkout
+./validate.py                          # schema, docs gate, cross-file sync, RTL rules
+cd /path/to/tt-repo-clone/test && make # the 255-scenario bench at RTL
+```
 
-## Resources
+`.github/workflows/`, `.devcontainer/`, `.vscode/`, `LICENSE` and `tb.gtkw` come
+from **TinyTapeout's template repo verbatim** and must not be hand-written —
+create the repo *from* the template, then run `assemble.sh` over it.
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
+## Licence
 
-## What next?
-
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
+Apache-2.0, which TinyTapeout's terms make mandatory for both the design and its
+documentation. Copyright 2026 Jason Hickey.
