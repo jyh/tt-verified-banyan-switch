@@ -37,6 +37,13 @@
   "//": "!!! DO NOT CHANGE ANYTHING BELOW THIS POINT !!!",
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
 
+  "//": "COLUMN-LAYOUT EXPERIMENT: two vertical channels, so the three pipeline",
+  "//": "stages are forced into three countable stripes. Coordinates in um on a",
+  "//": "334.88 x 225.76 die. FP_OBSTRUCTIONS guarantees the area stays empty for",
+  "//": "the whole flow; the design uses 1.6% of the cells on this die, so there",
+  "//": "is room for sixty channels, never mind two.",
+  "FP_OBSTRUCTIONS": [[112.0, 150.0, 130.0, 225.0], [212.0, 150.0, 230.0, 225.0]],
+
   "//": "Save some time",
   "RUN_KLAYOUT_XOR": 0,
   "RUN_KLAYOUT_DRC": 0,
