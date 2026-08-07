@@ -24,8 +24,6 @@ project:
 
   source_files:
     - "project.v"
-    - "banyan_fabric.v"
-    - "bitserial_switch.v"
 
 # Frame format (docs/silicon-frame-protocol-0806.md):
 #   cycle 0 ACT, 1 a2 | cycle 2 ACT, 3 a1 | cycle 4 ACT, 5 a0 | cycle 6+ payload
