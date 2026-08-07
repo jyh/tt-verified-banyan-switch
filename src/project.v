@@ -37,8 +37,8 @@ module tt_um_saltworks_banyan (
     banyan_fabric u_fab (.clk(clk), .rst_n(rst_n), .sof(uio_in[0]),
                          .din(bo[7:0]), .dout(uo_out), .cnt_o(cnt_o), .valid(valid));
 
-    assign uio_out = {4'b0, valid, cnt_o};
-    assign uio_oe  = 8'b0000_1111;
+    assign uio_out = {3'b000, valid, cnt_o, 1'b0};   // main's map: cnt at [3:1], valid [4], bit0 = sof IN
+    assign uio_oe  = 8'b0001_1110;                   // drive [4:1] only; uio[0] is the sof INPUT
     wire _unused = &{ena, bo[15:8], 1'b0};
 
 endmodule
