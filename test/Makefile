@@ -20,7 +20,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v banyan_fabric.v bitserial_switch.v
+PROJECT_SOURCES = project.v batcher_struct.v banyan_fabric.v bitserial_switch.v
 
 ifneq ($(GATES),yes)
 
