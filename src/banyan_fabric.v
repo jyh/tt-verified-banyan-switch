@@ -60,7 +60,7 @@ module banyan_fabric #(
     endgenerate
 
     // ---- three stages ------------------------------------------------------
-    (* keep *) wire [7:0] w0, w1;   // stage boundaries: KEPT so the flow cannot
+    wire [7:0] w0, w1;   // stage boundaries: KEPT so the flow cannot
                                  // dissolve the abstraction we reason about
     wire [7:0] w2;
 
