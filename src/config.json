@@ -37,6 +37,13 @@
   "//": "!!! DO NOT CHANGE ANYTHING BELOW THIS POINT !!!",
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
 
+  "//": "EXPERIMENT (branch only, never main): keep the module hierarchy through",
+  "//": "synthesis. Default is flatten, which renames every instance to _170_ and",
+  "//": "destroys the only handle a placement constraint could grab. This tests",
+  "//": "whether instance names survive - the ENABLING question for the column",
+  "//": "picture, since every name-based lever died on flattening.",
+  "SYNTH_HIERARCHY_MODE": "keep",
+
   "//": "Save some time",
   "RUN_KLAYOUT_XOR": 0,
   "RUN_KLAYOUT_DRC": 0,
