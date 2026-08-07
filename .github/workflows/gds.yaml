@@ -1,3 +1,22 @@
+# P8 — THE FLOW IS PINNED TO A SHA, NOT TO A TAG.
+#
+# Every `TinyTapeout/tt-gds-action*` ref below was `@ttsky26c`. That is a git
+# TAG, and a tag can be re-pointed: GitHub Actions resolves it at run time, so
+# the flow that hardens the submitted design could differ from the flow that
+# produced the GDS we verified. A SHA cannot move.
+#
+#   ttsky26c -> 651ea05e19e86a9c26d00307e8081ceb53d328d3   (2026-07-30, resolved
+#   with `gh api repos/TinyTapeout/tt-gds-action/commits/ttsky26c`)
+#
+# This pin is BEHAVIOURALLY IDENTICAL to the tag at the moment it was taken —
+# it changes what happens later, not what happens now.
+#
+# ⚠️ OBLIGATION, and it is the other half of pinning: RE-CHECK THE TAG BEFORE
+# SUBMITTING. If TinyTapeout moves `ttsky26c` to fix something the shuttle
+# requires, a pinned repo silently keeps the old flow and can fail the shuttle's
+# own re-run of precheck. Compare, then re-pin deliberately — do not drift, and
+# do not freeze blindly. Shuttle closes 2026-09-07 20:00 UTC.
+
 name: gds
 
 on:
@@ -14,7 +33,7 @@ jobs:
           submodules: recursive
 
       - name: Build GDS
-        uses: TinyTapeout/tt-gds-action@ttsky26c
+        uses: TinyTapeout/tt-gds-action@651ea05e19e86a9c26d00307e8081ceb53d328d3
         with:
           pdk: sky130A
 
@@ -23,7 +42,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Run Tiny Tapeout Precheck
-        uses: TinyTapeout/tt-gds-action/precheck@ttsky26c
+        uses: TinyTapeout/tt-gds-action/precheck@651ea05e19e86a9c26d00307e8081ceb53d328d3
 
   gl_test:
     needs: gds
@@ -35,7 +54,7 @@ jobs:
           submodules: recursive
 
       - name: GL test
-        uses: TinyTapeout/tt-gds-action/gl_test@ttsky26c
+        uses: TinyTapeout/tt-gds-action/gl_test@651ea05e19e86a9c26d00307e8081ceb53d328d3
 
   viewer:
     needs: gds
@@ -44,4 +63,4 @@ jobs:
       pages: write      # to deploy to Pages
       id-token: write   # to verify the deployment originates from an appropriate source
     steps:
-      - uses: TinyTapeout/tt-gds-action/viewer@ttsky26c
+      - uses: TinyTapeout/tt-gds-action/viewer@651ea05e19e86a9c26d00307e8081ceb53d328d3
