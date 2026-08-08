@@ -81,7 +81,7 @@ and the affected packets are lost.
 
 | | rate | what it is |
 |---|---|---|
-| **the logic** | **42.6 Mbit/s per link** (61.1 typical, 75.1 fast) | post-place-and-route signoff STA, slow corner `ss_100C_1v60`. The fabric is bit-serial, so MHz *is* Mbit/s per link |
+| **the logic** | **38.6 Mbit/s per link** (56.5 typical, 71.1 fast) | post-place-and-route signoff STA, slow corner `ss_100C_1v60`. The fabric is bit-serial, so MHz *is* Mbit/s per link |
 | **this chip** | **25 Mbit/s per link** | what `info.yaml` requests. **A pad limit, not a core limit** — the TinyTapeout pad's maximum *output* rate is 33 MHz, half its input ceiling, and a bit-serial fabric toggles every output every cycle |
 | the harness | shared | the demo rate is set by the pinout and the board, not by the fabric |
 
@@ -90,14 +90,16 @@ Signoff across all nine corners: **hold is clean everywhere** — worst hold sla
 lowering a clock fixes setup and does nothing for hold: a design can be "run
 slower" out of a setup problem and never out of a hold one.
 
-⚠️ **These figures are measured on the artifact **as this branch stands today**,
-whose Batcher is emitted from `bnCore`. The convention-C element carries twice
-the per-element state, so a re-emission changes the netlist — and these numbers
-with it. They are current, not final.**
+These figures are the **convention-C** tile — the Batcher emitted from `bnCCore`,
+four state bits per element. They replace the pre-convention-C figures this file
+carried earlier (42.6 / 61.1 / 75.1): **the sorter grew from 504 to 624 cells with
+twice the state, and f_max fell about 9 % at the slow corner.** That is the price
+of the composition, measured rather than estimated.
 
-Setup carries **24 violations at the slow corner against the 20 ns hardening
+Setup carries **124 violations at the slow corner against the 20 ns hardening
 constraint** — a 50 MHz this design does not claim. At the **25 Mbit/s this chip
-declares**, the slow corner closes with about **16.5 ns of margin**. The critical
+declares**, the slow corner closes with about **14.1 ns of margin**, still over
+1.5× headroom. The critical
 path is combinational from an input pad to an output pad: there is no constrained
 register-to-register path in the design at all, which is what "the data path is
 combinational" above means in timing terms.
