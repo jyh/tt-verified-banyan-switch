@@ -90,6 +90,11 @@ Signoff across all nine corners: **hold is clean everywhere** — worst hold sla
 lowering a clock fixes setup and does nothing for hold: a design can be "run
 slower" out of a setup problem and never out of a hold one.
 
+⚠️ **These figures are measured on the artifact **as this branch stands today**,
+whose Batcher is emitted from `bnCore`. The convention-C element carries twice
+the per-element state, so a re-emission changes the netlist — and these numbers
+with it. They are current, not final.**
+
 Setup carries **24 violations at the slow corner against the 20 ns hardening
 constraint** — a 50 MHz this design does not claim. At the **25 Mbit/s this chip
 declares**, the slow corner closes with about **16.5 ns of margin**. The critical
