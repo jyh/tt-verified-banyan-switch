@@ -9,6 +9,35 @@ the proof's partition: the sorter is the *hypothesis*, the banyan is the
 
 Read the datasheet first: [`docs/info.md`](docs/info.md).
 
+## The 1990 silicon
+
+This is not a new architecture. In 1990 Bellcore built it, and measured it.
+
+W. S. Marcus and J. J. Hickey, "A CMOS Batcher and banyan chip set for B-ISDN,"
+*1990 IEEE International Solid-State Circuits Conference, Digest of Technical
+Papers*, pp. 32–33 (session WPM 2.4), DOI
+[`10.1109/ISSCC.1990.110116`](https://doi.org/10.1109/ISSCC.1990.110116) — with
+the journal version as "A CMOS Batcher and Banyan chip set for B-ISDN packet
+switching," *IEEE Journal of Solid-State Circuits* **25**(6):1426–1432, December
+1990, DOI [`10.1109/4.62170`](https://doi.org/10.1109/4.62170).
+
+That chip set was **measured at 170 Mb/s per bit-serial link**, against a
+155.52 Mb/s SONET STS-3c requirement, for **5.44 Gb/s aggregate across 32
+channels**. It was **1.2 µm CMOS**, a single 5 V supply, about **1.5 W**, in an
+**84-pin LCC**.
+
+The switching elements are US Patent **5,130,976**, "Batcher and Banyan Switching
+Elements" (J. J. Hickey and W. S. Marcus, filed 1991-02-12, granted 1992-07-14).
+The network architecture is US Patent **4,910,730**, "Batcher-banyan network"
+(C. M. Day Jr. and J. N. Giacopelli, filed 1988-03-14, granted 1990-03-20) — cite
+it for the architecture only; it carries no process node and no 155 Mb/s figure.
+
+The ISSCC paper's **Figure 6 is a micrograph of the Batcher die**, and it is
+worth looking up: the architecture is legible directly off the silicon — an input
+column, then the switch-element fabric as countable vertical cell-column stripes
+separated by wiring channels, then a latch column, a mux, and an output column,
+inside a pad ring. We reproduce no part of it here; go and read the paper.
+
 ## What is actually proved, and what is not
 
 The synthesized gate netlist of the switch element — real sky130 standard cells,

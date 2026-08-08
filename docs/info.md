@@ -81,14 +81,21 @@ and the affected packets are lost.
 
 | | rate | what it is |
 |---|---|---|
-| **the logic** | **89 Mbit/s per link** (102 typical) | post-place-and-route signoff STA, slow corner `ss_100C_1v60`. The fabric is bit-serial, so MHz *is* Mbit/s per link |
+| **the logic** | **42.6 Mbit/s per link** (61.1 typical, 75.1 fast) | post-place-and-route signoff STA, slow corner `ss_100C_1v60`. The fabric is bit-serial, so MHz *is* Mbit/s per link |
 | **this chip** | **25 Mbit/s per link** | what `info.yaml` requests. **A pad limit, not a core limit** — the TinyTapeout pad's maximum *output* rate is 33 MHz, half its input ceiling, and a bit-serial fabric toggles every output every cycle |
 | the harness | shared | the demo rate is set by the pinout and the board, not by the fabric |
 
-Signoff, all nine corners: **zero setup violations, zero hold violations**, worst
-hold slack **+0.11 ns**. Hold is the number worth quoting, because lowering a
-clock fixes setup and does nothing for hold — a design can be "run slower" out of
-a setup problem and never out of a hold one.
+Signoff across all nine corners: **hold is clean everywhere** — worst hold slack
+**+0.11 ns**, zero hold violations. Hold is the number worth quoting, because
+lowering a clock fixes setup and does nothing for hold: a design can be "run
+slower" out of a setup problem and never out of a hold one.
+
+Setup carries **24 violations at the slow corner against the 20 ns hardening
+constraint** — a 50 MHz this design does not claim. At the **25 Mbit/s this chip
+declares**, the slow corner closes with about **16.5 ns of margin**. The critical
+path is combinational from an input pad to an output pad: there is no constrained
+register-to-register path in the design at all, which is what "the data path is
+combinational" above means in timing terms.
 
 ## External hardware
 
