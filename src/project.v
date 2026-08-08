@@ -1,14 +1,26 @@
 /*
- * BB-1 / B3 — THE COMPOSED TILE (revision branch; `main` carries the proven
- * banyan alone and is the Captain's floor).
+ * BB-1 / B4 — THE COMPOSED TILE AT CONVENTION C.
  *
- * Batcher sorter (24 bitonic compare-exchange elements, emitted STRUCTURALLY
- * by compiler's `emitSMux` from `bnCore`) feeding the landed banyan fabric.
+ * The convention-C Batcher sorter (24 bitonic compare-exchange elements,
+ * emitted structurally from `bnCCore`) feeding the landed banyan fabric.
  *
- * ⚠️ THIS RUN ASKS KB4 ONLY: does ~2.6x logic HARDEN? The Batcher core takes
- * act/data as SEPARATE vectors while the banyan takes the INTERLEAVED frame;
- * matching those protocols is B4. `gl_test` is EXPECTED TO FAIL here and that
- * is not a hardening result. Stated before the run, not after it.
+ * WHY THIS REPLACES THE B3 WIRING.  B3 instantiated the PRE-convention-C
+ * `bnCore`, whose element takes activity and data as SEPARATE vectors while the
+ * banyan takes the INTERLEAVED frame — a protocol mismatch its own header
+ * declared, and the reason `gl_test` was expected to fail there.
+ *
+ * Convention C closes it: `bnCCore` consumes the SAME six-cycle header the
+ * banyan does — ACT, a2, ACT, a1, ACT, a0 — so the sorter's eight data outputs
+ * wire straight into the banyan's `din` with no skew, no header buffer and no
+ * glue.  Measured before this file was written: all eight wires route correctly
+ * on an UNSORTED full-load permutation.
+ *
+ * bnCCore's pinning (BatcherNetC.lean:55-60, `bnC_core_inputs/outputs`):
+ *   i0            rst (active high)
+ *   i1 … i8       the eight serial data lines
+ *   i9 … i104     96 state bits, 4 per element (decided, swap, phase, bothAct)
+ *   o0 … o7       the eight sorted data lines
+ *   o8 … o103     96 next-state bits
  */
 `default_nettype none
 
@@ -23,22 +35,226 @@ module tt_um_saltworks_banyan (
     input  wire       rst_n
 );
 
-    // ---- Batcher state: 48 flops, one pair per element ----------------
-    reg  [47:0] bst;
-    wire [63:0] bo;          // o0..o7 data, o8..o15 act, o16..o63 next-state
+    // ---- the sorter's state: 24 elements x 4 bits -----------------------
+    reg  [95:0]  bst;
+    wire [103:0] bo;
 
-    // ---- the emitted structural sorter core ---------------------------
-    batcher_struct u_sort (.i0(~rst_n), .i1(uio_in[0]), .i2(uio_in[1]), .i3(uio_in[2]), .i4(uio_in[3]), .i5(uio_in[4]), .i6(uio_in[5]), .i7(uio_in[6]), .i8(uio_in[7]), .i9(ui_in[0]), .i10(ui_in[1]), .i11(ui_in[2]), .i12(ui_in[3]), .i13(ui_in[4]), .i14(ui_in[5]), .i15(ui_in[6]), .i16(ui_in[7]), .i17(bst[0]), .i18(bst[1]), .i19(bst[2]), .i20(bst[3]), .i21(bst[4]), .i22(bst[5]), .i23(bst[6]), .i24(bst[7]), .i25(bst[8]), .i26(bst[9]), .i27(bst[10]), .i28(bst[11]), .i29(bst[12]), .i30(bst[13]), .i31(bst[14]), .i32(bst[15]), .i33(bst[16]), .i34(bst[17]), .i35(bst[18]), .i36(bst[19]), .i37(bst[20]), .i38(bst[21]), .i39(bst[22]), .i40(bst[23]), .i41(bst[24]), .i42(bst[25]), .i43(bst[26]), .i44(bst[27]), .i45(bst[28]), .i46(bst[29]), .i47(bst[30]), .i48(bst[31]), .i49(bst[32]), .i50(bst[33]), .i51(bst[34]), .i52(bst[35]), .i53(bst[36]), .i54(bst[37]), .i55(bst[38]), .i56(bst[39]), .i57(bst[40]), .i58(bst[41]), .i59(bst[42]), .i60(bst[43]), .i61(bst[44]), .i62(bst[45]), .i63(bst[46]), .i64(bst[47]), .o0(bo[0]), .o1(bo[1]), .o2(bo[2]), .o3(bo[3]), .o4(bo[4]), .o5(bo[5]), .o6(bo[6]), .o7(bo[7]), .o8(bo[8]), .o9(bo[9]), .o10(bo[10]), .o11(bo[11]), .o12(bo[12]), .o13(bo[13]), .o14(bo[14]), .o15(bo[15]), .o16(bo[16]), .o17(bo[17]), .o18(bo[18]), .o19(bo[19]), .o20(bo[20]), .o21(bo[21]), .o22(bo[22]), .o23(bo[23]), .o24(bo[24]), .o25(bo[25]), .o26(bo[26]), .o27(bo[27]), .o28(bo[28]), .o29(bo[29]), .o30(bo[30]), .o31(bo[31]), .o32(bo[32]), .o33(bo[33]), .o34(bo[34]), .o35(bo[35]), .o36(bo[36]), .o37(bo[37]), .o38(bo[38]), .o39(bo[39]), .o40(bo[40]), .o41(bo[41]), .o42(bo[42]), .o43(bo[43]), .o44(bo[44]), .o45(bo[45]), .o46(bo[46]), .o47(bo[47]), .o48(bo[48]), .o49(bo[49]), .o50(bo[50]), .o51(bo[51]), .o52(bo[52]), .o53(bo[53]), .o54(bo[54]), .o55(bo[55]), .o56(bo[56]), .o57(bo[57]), .o58(bo[58]), .o59(bo[59]), .o60(bo[60]), .o61(bo[61]), .o62(bo[62]), .o63(bo[63]));
+    batcher_c u_sort (
+        .i0(~rst_n),
+        .i1(ui_in[0]), .i2(ui_in[1]), .i3(ui_in[2]), .i4(ui_in[3]),
+        .i5(ui_in[4]), .i6(ui_in[5]), .i7(ui_in[6]), .i8(ui_in[7]),
+        .i9(bst[0]),
+        .i10(bst[1]),
+        .i11(bst[2]),
+        .i12(bst[3]),
+        .i13(bst[4]),
+        .i14(bst[5]),
+        .i15(bst[6]),
+        .i16(bst[7]),
+        .i17(bst[8]),
+        .i18(bst[9]),
+        .i19(bst[10]),
+        .i20(bst[11]),
+        .i21(bst[12]),
+        .i22(bst[13]),
+        .i23(bst[14]),
+        .i24(bst[15]),
+        .i25(bst[16]),
+        .i26(bst[17]),
+        .i27(bst[18]),
+        .i28(bst[19]),
+        .i29(bst[20]),
+        .i30(bst[21]),
+        .i31(bst[22]),
+        .i32(bst[23]),
+        .i33(bst[24]),
+        .i34(bst[25]),
+        .i35(bst[26]),
+        .i36(bst[27]),
+        .i37(bst[28]),
+        .i38(bst[29]),
+        .i39(bst[30]),
+        .i40(bst[31]),
+        .i41(bst[32]),
+        .i42(bst[33]),
+        .i43(bst[34]),
+        .i44(bst[35]),
+        .i45(bst[36]),
+        .i46(bst[37]),
+        .i47(bst[38]),
+        .i48(bst[39]),
+        .i49(bst[40]),
+        .i50(bst[41]),
+        .i51(bst[42]),
+        .i52(bst[43]),
+        .i53(bst[44]),
+        .i54(bst[45]),
+        .i55(bst[46]),
+        .i56(bst[47]),
+        .i57(bst[48]),
+        .i58(bst[49]),
+        .i59(bst[50]),
+        .i60(bst[51]),
+        .i61(bst[52]),
+        .i62(bst[53]),
+        .i63(bst[54]),
+        .i64(bst[55]),
+        .i65(bst[56]),
+        .i66(bst[57]),
+        .i67(bst[58]),
+        .i68(bst[59]),
+        .i69(bst[60]),
+        .i70(bst[61]),
+        .i71(bst[62]),
+        .i72(bst[63]),
+        .i73(bst[64]),
+        .i74(bst[65]),
+        .i75(bst[66]),
+        .i76(bst[67]),
+        .i77(bst[68]),
+        .i78(bst[69]),
+        .i79(bst[70]),
+        .i80(bst[71]),
+        .i81(bst[72]),
+        .i82(bst[73]),
+        .i83(bst[74]),
+        .i84(bst[75]),
+        .i85(bst[76]),
+        .i86(bst[77]),
+        .i87(bst[78]),
+        .i88(bst[79]),
+        .i89(bst[80]),
+        .i90(bst[81]),
+        .i91(bst[82]),
+        .i92(bst[83]),
+        .i93(bst[84]),
+        .i94(bst[85]),
+        .i95(bst[86]),
+        .i96(bst[87]),
+        .i97(bst[88]),
+        .i98(bst[89]),
+        .i99(bst[90]),
+        .i100(bst[91]),
+        .i101(bst[92]),
+        .i102(bst[93]),
+        .i103(bst[94]),
+        .i104(bst[95]),
+        .o0(bo[0]),
+        .o1(bo[1]),
+        .o2(bo[2]),
+        .o3(bo[3]),
+        .o4(bo[4]),
+        .o5(bo[5]),
+        .o6(bo[6]),
+        .o7(bo[7]),
+        .o8(bo[8]),
+        .o9(bo[9]),
+        .o10(bo[10]),
+        .o11(bo[11]),
+        .o12(bo[12]),
+        .o13(bo[13]),
+        .o14(bo[14]),
+        .o15(bo[15]),
+        .o16(bo[16]),
+        .o17(bo[17]),
+        .o18(bo[18]),
+        .o19(bo[19]),
+        .o20(bo[20]),
+        .o21(bo[21]),
+        .o22(bo[22]),
+        .o23(bo[23]),
+        .o24(bo[24]),
+        .o25(bo[25]),
+        .o26(bo[26]),
+        .o27(bo[27]),
+        .o28(bo[28]),
+        .o29(bo[29]),
+        .o30(bo[30]),
+        .o31(bo[31]),
+        .o32(bo[32]),
+        .o33(bo[33]),
+        .o34(bo[34]),
+        .o35(bo[35]),
+        .o36(bo[36]),
+        .o37(bo[37]),
+        .o38(bo[38]),
+        .o39(bo[39]),
+        .o40(bo[40]),
+        .o41(bo[41]),
+        .o42(bo[42]),
+        .o43(bo[43]),
+        .o44(bo[44]),
+        .o45(bo[45]),
+        .o46(bo[46]),
+        .o47(bo[47]),
+        .o48(bo[48]),
+        .o49(bo[49]),
+        .o50(bo[50]),
+        .o51(bo[51]),
+        .o52(bo[52]),
+        .o53(bo[53]),
+        .o54(bo[54]),
+        .o55(bo[55]),
+        .o56(bo[56]),
+        .o57(bo[57]),
+        .o58(bo[58]),
+        .o59(bo[59]),
+        .o60(bo[60]),
+        .o61(bo[61]),
+        .o62(bo[62]),
+        .o63(bo[63]),
+        .o64(bo[64]),
+        .o65(bo[65]),
+        .o66(bo[66]),
+        .o67(bo[67]),
+        .o68(bo[68]),
+        .o69(bo[69]),
+        .o70(bo[70]),
+        .o71(bo[71]),
+        .o72(bo[72]),
+        .o73(bo[73]),
+        .o74(bo[74]),
+        .o75(bo[75]),
+        .o76(bo[76]),
+        .o77(bo[77]),
+        .o78(bo[78]),
+        .o79(bo[79]),
+        .o80(bo[80]),
+        .o81(bo[81]),
+        .o82(bo[82]),
+        .o83(bo[83]),
+        .o84(bo[84]),
+        .o85(bo[85]),
+        .o86(bo[86]),
+        .o87(bo[87]),
+        .o88(bo[88]),
+        .o89(bo[89]),
+        .o90(bo[90]),
+        .o91(bo[91]),
+        .o92(bo[92]),
+        .o93(bo[93]),
+        .o94(bo[94]),
+        .o95(bo[95]),
+        .o96(bo[96]),
+        .o97(bo[97]),
+        .o98(bo[98]),
+        .o99(bo[99]),
+        .o100(bo[100]),
+        .o101(bo[101]),
+        .o102(bo[102]),
+        .o103(bo[103])
+    );
 
-    always @(posedge clk) if (!rst_n) bst <= 48'b0; else bst <= bo[63:16];
+    always @(posedge clk) if (!rst_n) bst <= 96'b0; else bst <= bo[103:8];
 
-    // ---- the landed banyan, fed by the sorter's data output ----------
+    // ---- the landed banyan, fed the SORTED frame ------------------------
     wire [2:0] cnt_o; wire valid;
     banyan_fabric u_fab (.clk(clk), .rst_n(rst_n), .sof(uio_in[0]),
-                         .din(bo[7:0]), .dout(uo_out), .cnt_o(cnt_o), .valid(valid));
+                         .din(bo[7:0]), .dout(uo_out),
+                         .cnt_o(cnt_o), .valid(valid));
 
-    assign uio_out = {3'b000, valid, cnt_o, 1'b0};   // main's map: cnt at [3:1], valid [4], bit0 = sof IN
-    assign uio_oe  = 8'b0001_1110;                   // drive [4:1] only; uio[0] is the sof INPUT
-    wire _unused = &{ena, bo[15:8], 1'b0};
+    assign uio_out = {3'b000, valid, cnt_o, 1'b0};  // cnt at [3:1], valid [4], bit0 = sof IN
+    assign uio_oe  = 8'b0001_1110;                    // drive [4:1] only
+    wire _unused = &{ena, uio_in[7:1], 1'b0};
 
 endmodule

@@ -20,18 +20,18 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v batcher_struct.v banyan_fabric.v bitserial_switch.v
+PROJECT_SOURCES = project.v batcher_c.v banyan_fabric.v bitserial_switch.v
 
 ifneq ($(GATES),yes)
 
 # "RTL" simulation — and the scare quotes are load-bearing for THIS project.
 #
-# ⚠️ OUR SOURCES ARE A STRUCTURAL sky130 NETLIST, not RTL. `batcher_struct.v`
-# instantiates 504 standard cells (and2_1 ×144, inv_1 ×120, mux2_1 ×120,
-# or2_1 ×72, xor2_1 ×48) because synthesis-as-passthrough is this project's
+# ⚠️ OUR SOURCES ARE A STRUCTURAL sky130 NETLIST, not RTL. `batcher_c.v`
+# instantiates 624 standard cells (and2_1 ×264 inv_1 ×168 mux2_1 ×96 or2_1 ×72 xor2_1 ×24)
+# because synthesis-as-passthrough is this project's
 # whole claim: the netlist proved in Lean is the netlist that ships. So Icarus
 # needs the vendor cell models HERE exactly as the GATES=yes branch does.
-# Without them elaboration dies with 505 × "Unknown module type:
+# Without them elaboration dies with "Unknown module type:
 # sky130_fd_sc_hd__and2_1" and `results.xml` is never written.
 #
 # ⛔ AND NOT THE OBVIOUS ALTERNATIVE: shipping a behavioural stand-in for the

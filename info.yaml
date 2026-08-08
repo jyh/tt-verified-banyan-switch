@@ -13,7 +13,7 @@ project:
   title:       "Verified 8x8 bit-serial banyan switch"
   author:      "Jason Hickey"
   discord:     ""
-  description: "A self-routing 8x8 packet switch fabric whose gate netlist is proved equivalent to its Lean specification inside the Lean kernel. Recreates the banyan half of US Patent 4,910,730 (1988)."
+  description: "A self-routing 8x8 packet switch fabric whose gate netlist is proved equivalent to its Lean specification inside the Lean kernel. Recreates the Batcher-banyan architecture of US Patent 4,910,730 (1988) as a single tile."
   language:    "Verilog"
   clock_hz:    25000000
 
@@ -24,7 +24,7 @@ project:
 
   source_files:
     - "project.v"
-    - "batcher_struct.v"
+    - "batcher_c.v"
     - "banyan_fabric.v"
     - "bitserial_switch.v"
 
